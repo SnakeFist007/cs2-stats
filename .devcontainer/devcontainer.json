@@ -1,7 +1,6 @@
 {
     "name": "CS2 Stats Python",
     "image": "python:3.11-slim",
-    
     "customizations": {
         "vscode": {
             "extensions": [
@@ -9,12 +8,12 @@
             ],
             "settings": {
                 "dev.containers.dockerCredentialHelper": false,
-                "python.defaultInterpreterPath": "/usr/local/bin/python"
+                "python.defaultInterpreterPath": "/usr/local/bin/python",
+                "[python]": {
+                    "editor.formatOnSave": true
+                }
             }
         }
     },
-
-    "postCreateCommand": "pip install pandas numpy matplotlib seaborn plotly jupyter openpyxl scipy scikit-learn",
-    
     "remoteUser": "root"
 }
