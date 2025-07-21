@@ -7,6 +7,7 @@ setup(
     author="SnakeFist",
     author_email="github@snakefist.de",
     packages=find_packages(),
+    py_modules=["main"],
     install_requires=[
         # No external dependencies - uses only Python standard library
     ],
