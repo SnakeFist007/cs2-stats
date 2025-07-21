@@ -1,5 +1,6 @@
 from typing import Dict
 
+
 def filter_players(matches: Dict, player_mapping: Dict) -> Dict:
     """
     Filters players to only include those in the player mapping and normalizes their names
@@ -13,7 +14,8 @@ def filter_players(matches: Dict, player_mapping: Dict) -> Dict:
             "map": match_data["map"],
             "teamA": match_data["teamA"],
             "teamB": match_data["teamB"],
-            "players": {}
+            "players": {},
+            "rounds": match_data["rounds"]
         }
         
         # Filter and normalize players

@@ -1,18 +1,27 @@
 from typing import Dict
 from collections import defaultdict
 from modules.determineOutcome import determine_outcome
+from modules.determinePlayside import determine_playerTeamSide
+
 
 def analyze_stats(matches: Dict, focusPlayer: str) -> Dict:
     """
-    Analyzes match statistics and generates comprehensive reports
+    Analyzes match statistics
     """
     map_stats = defaultdict(lambda: {
         'total_matches': 0,
         'won': 0, 'lost': 0, 'tied': 0,
         'total_rounds': 0
     })
-    # TODO: Add round stats
-    #round_stats = {}
+    
+    # Initialize round stats
+    round_stats = defaultdict(lambda: {
+        'ctRoundsTotal': 0,
+        'ctRoundsWon': 0,
+        'tRoundsTotal': 0,
+        'tRoundsWon': 0
+    })
+    
     player_stats = defaultdict(lambda: {
         'matches': 0,
         'kills': 0, 'assists': 0, 'deaths': 0,
@@ -23,10 +32,15 @@ def analyze_stats(matches: Dict, focusPlayer: str) -> Dict:
         'vsFourCount': 0, 'vsFourWon': 0,
         'vsFiveCount': 0, 'vsFiveWon': 0
     })
+    
     total_stats = {
         'total_matches': 0,
         'won': 0, 'lost': 0, 'tied': 0,
-        'total_rounds': 0
+        'total_rounds': 0,
+        'ctRoundsTotal': 0,
+        'ctRoundsWon': 0,
+        'tRoundsTotal': 0,
+        'tRoundsWon': 0
     }
     
     # Process matches
@@ -34,8 +48,10 @@ def analyze_stats(matches: Dict, focusPlayer: str) -> Dict:
         map_name = match["map"]
     
         # Process general map statistics
-        map_stats[map_name]["total_matches"] +=1
+        map_stats[map_name]["total_matches"] += 1
         map_stats[map_name]["total_rounds"] += (match["teamA"]["score"] + match["teamB"]["score"])
+        total_stats["total_matches"] += 1
+        total_stats["total_rounds"] += (match["teamA"]["score"] + match["teamB"]["score"])
         
         outcome = determine_outcome(match, focusPlayer)
         if outcome == "Win":
@@ -48,15 +64,40 @@ def analyze_stats(matches: Dict, focusPlayer: str) -> Dict:
             map_stats[map_name]["tied"] += 1
             total_stats["tied"] += 1
             
-        # TODO: Add CT/T stats
         # Process round statistics
-        #if determine_startSide(match, focusPlayer) == "CT":
-        #    round_stats[map_name]["ctRoundsTotal"] += 
-        #    round_stats[map_name]["ctRoundsWon"] += 
-        #else:
-        #    round_stats[map_name]["tRoundsTotal"] += 
-        #    round_stats[map_name]["tRoundsWon"] += 
-
+        if "rounds" in match:
+            # Process each round
+            for round_data in match["rounds"]:
+                player_team_letter, side = determine_playerTeamSide(match, round_data, focusPlayer)
+                
+                if not player_team_letter or not side:
+                    continue
+                
+                # Determine if focus player's team won
+                winner_team_name = round_data.get("winnerTeamName", "")
+                player_won = False
+                
+                if player_team_letter == "A" and winner_team_name == match["teamA"]["name"]:
+                    player_won = True
+                elif player_team_letter == "B" and winner_team_name == match["teamB"]["name"]:
+                    player_won = True
+                
+                # Update statistics based on side
+                if side == "CT":
+                    round_stats[map_name]["ctRoundsTotal"] += 1
+                    total_stats["ctRoundsTotal"] += 1
+                    
+                    if player_won:
+                        round_stats[map_name]["ctRoundsWon"] += 1
+                        total_stats["ctRoundsWon"] += 1
+                        
+                elif side == "T":
+                    round_stats[map_name]["tRoundsTotal"] += 1
+                    total_stats["tRoundsTotal"] += 1
+                    
+                    if player_won:
+                        round_stats[map_name]["tRoundsWon"] += 1
+                        total_stats["tRoundsWon"] += 1
             
         # Process players statistics
         for player_name, player in match["players"].items():
@@ -70,7 +111,7 @@ def analyze_stats(matches: Dict, focusPlayer: str) -> Dict:
             stats["mvp"] += player["mvpCount"]
             stats["headshots"] += player["headshotCount"]
             
-            # Per Round / Match stats
+            # Per Round / Match stats (commented out as not in current data)
             #stats["utilityDamage"] += player["utilityDamage"]
             #stats["kast"] += player["kast"]
             #stats["hltv1"] += player["hltvRating"]
@@ -94,6 +135,7 @@ def analyze_stats(matches: Dict, focusPlayer: str) -> Dict:
     
     output = {
         "map_stats": dict(map_stats),
+        "round_stats": dict(round_stats),
         "player_stats": dict(player_stats),
         "total_stats": dict(total_stats)
     }

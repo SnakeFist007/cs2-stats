@@ -1,6 +1,7 @@
 from typing import Dict
 
-def generate_report(stats_dict: Dict, focus_player: str) -> str:
+
+def generate_report(stats_dict: Dict) -> str:
     """
     Formats the stats dictionary into a human-readable markdown format for Obsidian
     """
@@ -16,6 +17,19 @@ def generate_report(stats_dict: Dict, focus_player: str) -> str:
     output.append(f"**Total Matches:** {total_matches}")
     output.append("")
     output.append(f"**Win Rate:** {win_rate:.1f}% ({total_stats.get('won', 0)}W-{total_stats.get('lost', 0)}L-{total_stats.get('tied', 0)}T)")
+    
+    # Add round statistics
+    ct_rounds_total = total_stats.get('ctRoundsTotal', 0)
+    ct_rounds_won = total_stats.get('ctRoundsWon', 0)
+    t_rounds_total = total_stats.get('tRoundsTotal', 0)
+    t_rounds_won = total_stats.get('tRoundsWon', 0)
+    
+    ct_win_rate = (ct_rounds_won / ct_rounds_total * 100) if ct_rounds_total > 0 else 0
+    t_win_rate = (t_rounds_won / t_rounds_total * 100) if t_rounds_total > 0 else 0
+    
+    output.append(f"**CT Side:** {ct_win_rate:.1f}% ({ct_rounds_won}/{ct_rounds_total} rounds)")
+    output.append(f"**T Side:** {t_win_rate:.1f}% ({t_rounds_won}/{t_rounds_total} rounds)")
+    output.append("")
     
     # Map statistics for strongest/weakest
     map_stats = stats_dict.get('map_stats', {})
@@ -53,6 +67,9 @@ def generate_report(stats_dict: Dict, focus_player: str) -> str:
     output.append("| Map | Matches | Record | Win% | CT Win% | T Win% |")
     output.append("| --- | ------- | ------ | ---- | ------- | ------ |")
     
+    # Get round stats
+    round_stats = stats_dict.get('round_stats', {})
+    
     # Sort maps by matches played (descending)
     sorted_maps = sorted(map_stats.items(), key=lambda x: x[1]['total_matches'], reverse=True)
     
@@ -63,10 +80,20 @@ def generate_report(stats_dict: Dict, focus_player: str) -> str:
         tied = stats['tied']
         map_win_rate = (won / matches * 100) if matches > 0 else 0
         
+        # Get CT/T win rates for this map
+        map_round_stats = round_stats.get(map_name, {})
+        ct_rounds = map_round_stats.get('ctRoundsTotal', 0)
+        ct_wins = map_round_stats.get('ctRoundsWon', 0)
+        t_rounds = map_round_stats.get('tRoundsTotal', 0)
+        t_wins = map_round_stats.get('tRoundsWon', 0)
+        
+        ct_win_pct = (ct_wins / ct_rounds * 100) if ct_rounds > 0 else 0
+        t_win_pct = (t_wins / t_rounds * 100) if t_rounds > 0 else 0
+        
         # Format map name with italic prefix
         map_display = f"_{map_name}_"
         
-        output.append(f"| {map_display} | {matches} | {won}W-{lost}L-{tied}T | {map_win_rate:.0f}% | | |")
+        output.append(f"| {map_display} | {matches} | {won}W-{lost}L-{tied}T | {map_win_rate:.0f}% | {ct_win_pct:.0f}% | {t_win_pct:.0f}% |")
     
     output.append("")
     
@@ -98,5 +125,36 @@ def generate_report(stats_dict: Dict, focus_player: str) -> str:
         output.append(f"| {player_display} | {matches} | {kills}/{deaths}/{assists} | {kd_ratio:.2f} | {hs_percentage:.1f}% | {stats['mvp']} | {clutch_success_rate:.1f}% |")
         
     output.append("")
+    
+    # Add Side Performance Summary if round stats exist
+    if round_stats:
+        output.append("## Side Performance Summary")
+        output.append("")
+        output.append("| Map | CT Rounds | CT Win% | T Rounds | T Win% | Side Preference |")
+        output.append("| --- | --------- | ------- | -------- | ------ | --------------- |")
+        
+        for map_name, stats in sorted_maps:
+            map_round_stats = round_stats.get(map_name, {})
+            ct_rounds = map_round_stats.get('ctRoundsTotal', 0)
+            ct_wins = map_round_stats.get('ctRoundsWon', 0)
+            t_rounds = map_round_stats.get('tRoundsTotal', 0)
+            t_wins = map_round_stats.get('tRoundsWon', 0)
+            
+            if ct_rounds > 0 or t_rounds > 0:
+                ct_win_pct = (ct_wins / ct_rounds * 100) if ct_rounds > 0 else 0
+                t_win_pct = (t_wins / t_rounds * 100) if t_rounds > 0 else 0
+                
+                # Determine side preference
+                if ct_win_pct > t_win_pct + 5:
+                    preference = "CT-sided"
+                elif t_win_pct > ct_win_pct + 5:
+                    preference = "T-sided"
+                else:
+                    preference = "Balanced"
+                
+                map_display = f"_{map_name}_"
+                output.append(f"| {map_display} | {ct_wins}/{ct_rounds} | {ct_win_pct:.0f}% | {t_wins}/{t_rounds} | {t_win_pct:.0f}% | {preference} |")
+        
+        output.append("")
     
     return '\n'.join(output)

@@ -1,5 +1,6 @@
 from typing import Dict
 
+
 def determine_outcome(match: Dict, focusPlayer: str) -> str:
     """
     Determines the outcome of a match (Win, Loss, Tie)
