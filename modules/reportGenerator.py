@@ -14,22 +14,7 @@ def generate_report(stats_dict: Dict) -> str:
     
     output.append("## Overall Performance")
     output.append("")
-    output.append(f"**Total Matches:** {total_matches}")
-    output.append("")
-    output.append(f"**Win Rate:** {win_rate:.1f}% ({total_stats.get('won', 0)}W-{total_stats.get('lost', 0)}L-{total_stats.get('tied', 0)}T)")
-    
-    # Add round statistics
-    ct_rounds_total = total_stats.get('ctRoundsTotal', 0)
-    ct_rounds_won = total_stats.get('ctRoundsWon', 0)
-    t_rounds_total = total_stats.get('tRoundsTotal', 0)
-    t_rounds_won = total_stats.get('tRoundsWon', 0)
-    
-    ct_win_rate = (ct_rounds_won / ct_rounds_total * 100) if ct_rounds_total > 0 else 0
-    t_win_rate = (t_rounds_won / t_rounds_total * 100) if t_rounds_total > 0 else 0
-    
-    output.append(f"**CT Side:** {ct_win_rate:.1f}% ({ct_rounds_won}/{ct_rounds_total} rounds)")
-    output.append(f"**T Side:** {t_win_rate:.1f}% ({t_rounds_won}/{t_rounds_total} rounds)")
-    output.append("")
+    output.append(f"**Total Matches:** {total_matches} ({total_stats.get('won', 0)}W-{total_stats.get('lost', 0)}L-{total_stats.get('tied', 0)}T)")
     
     # Map statistics for strongest/weakest
     map_stats = stats_dict.get('map_stats', {})
@@ -40,6 +25,20 @@ def generate_report(stats_dict: Dict) -> str:
         output.append(f"- _Strongest Map:_ {best_map[0].replace('de_', '').title()} ({best_map[1]['won']}/{best_map[1]['total_matches']} wins)")
         output.append(f"- _Weakest Map:_ {worst_map[0].replace('de_', '').title()} ({worst_map[1]['won']}/{worst_map[1]['total_matches']} wins)")
         output.append("")
+    
+    # Add round statistics
+    ct_rounds_total = total_stats.get('ctRoundsTotal', 0)
+    ct_rounds_won = total_stats.get('ctRoundsWon', 0)
+    t_rounds_total = total_stats.get('tRoundsTotal', 0)
+    t_rounds_won = total_stats.get('tRoundsWon', 0)
+    
+    ct_win_rate = (ct_rounds_won / ct_rounds_total * 100) if ct_rounds_total > 0 else 0
+    t_win_rate = (t_rounds_won / t_rounds_total * 100) if t_rounds_total > 0 else 0
+    
+    output.append(f"**Win Rate:** {win_rate:.1f}%")
+    output.append(f"- _CT Side:_ {ct_win_rate:.1f}% ({ct_rounds_won}/{ct_rounds_total} rounds)")
+    output.append(f"- _T Side:_ {t_win_rate:.1f}% ({t_rounds_won}/{t_rounds_total} rounds)")
+    output.append("")
     
     # Players of the week
     player_stats = stats_dict.get('player_stats', {})
